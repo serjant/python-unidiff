@@ -164,6 +164,8 @@ class PatchedFile(list):
         self.source_timestamp = source_timestamp
         self.target_file = target
         self.target_timestamp = target_timestamp
+	self.add_lines = []
+	self.removed_lines = []
 
     def __repr__(self):
         return make_str("<PatchedFile: %s>") % make_str(self.path)
@@ -196,9 +198,11 @@ class PatchedFile(list):
             if line_type == LINE_TYPE_ADDED:
                 original_line.target_line_no = target_line_no
                 target_line_no += 1
+		self.added_lines.append("{0}\n".format(value))
             elif line_type == LINE_TYPE_REMOVED:
                 original_line.source_line_no = source_line_no
                 source_line_no += 1
+		self.removed_lines.append("{0}\n".format(value))
             elif line_type == LINE_TYPE_CONTEXT:
                 original_line.target_line_no = target_line_no
                 target_line_no += 1
