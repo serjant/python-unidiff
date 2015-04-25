@@ -164,7 +164,7 @@ class PatchedFile(list):
         self.source_timestamp = source_timestamp
         self.target_file = target
         self.target_timestamp = target_timestamp
-	self.add_lines = []
+	self.added_lines = []
 	self.removed_lines = []
 
     def __repr__(self):
