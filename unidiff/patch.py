@@ -198,7 +198,7 @@ class PatchedFile(list):
             if line_type == LINE_TYPE_ADDED:
                 original_line.target_line_no = target_line_no
                 target_line_no += 1
-		self.added_lines_content = "{0}\n{1}".format(self.add_lines_content, value)
+		self.added_lines_content = "{0}\n{1}".format(self.added_lines_content, value)
             elif line_type == LINE_TYPE_REMOVED:
                 original_line.source_line_no = source_line_no
                 source_line_no += 1
