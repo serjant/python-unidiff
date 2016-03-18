@@ -33,6 +33,7 @@ from unidiff.constants import (
     DEFAULT_ENCODING,
     LINE_TYPE_ADDED,
     LINE_TYPE_CONTEXT,
+    LINE_TYPE_EMPTY,
     LINE_TYPE_REMOVED,
     RE_HUNK_BODY_LINE,
     RE_HUNK_HEADER,
@@ -63,10 +64,11 @@ class Line(object):
     """A diff line."""
 
     def __init__(self, value, line_type,
-                 source_line_no=None, target_line_no=None):
+                 source_line_no=None, target_line_no=None, diff_line_no=None):
         super(Line, self).__init__()
         self.source_line_no = source_line_no
         self.target_line_no = target_line_no
+        self.diff_line_no = diff_line_no
         self.line_type = line_type
         self.value = value
 
@@ -99,8 +101,12 @@ class Hunk(list):
             src_len = 1
         if tgt_len is None:
             tgt_len = 1
+        self.added = 0  # number of added lines
+        self.removed = 0  # number of removed lines
+        self.source = []
         self.source_start = int(src_start)
         self.source_length = int(src_len)
+        self.target = []
         self.target_start = int(tgt_start)
         self.target_length = int(tgt_len)
         self.section_header = section_header
@@ -120,30 +126,24 @@ class Hunk(list):
         content = '\n'.join(unicode(line) for line in self)
         return head + content
 
+    def append(self, line):
+        """Append the line to hunk, and keep track of source/target lines."""
+        super(Hunk, self).append(line)
+        s = str(line)
+        if line.is_added:
+            self.added += 1
+            self.target.append(s)
+        elif line.is_removed:
+            self.removed += 1
+            self.source.append(s)
+        elif line.is_context:
+            self.target.append(s)
+            self.source.append(s)
+
     def is_valid(self):
         """Check hunk header data matches entered lines info."""
         return (len(self.source) == self.source_length and
                 len(self.target) == self.target_length)
-
-    @property
-    def added(self):
-        """Number of added lines in the hunk."""
-        return len([l for l in self if l.is_added])
-
-    @property
-    def removed(self):
-        """Number of removed lines in the hunk."""
-        return len([l for l in self if l.is_removed])
-
-    @property
-    def source(self):
-        """Hunk lines from source file as a list."""
-        return [str(l) for l in self.source_lines()]
-
-    @property
-    def target(self):
-        """Hunk lines from target file as a list."""
-        return [str(l) for l in self.target_lines()]
 
     def source_lines(self):
         """Hunk lines from source file (generator)."""
@@ -184,8 +184,10 @@ class PatchedFile(list):
 
         source_line_no = hunk.source_start
         target_line_no = hunk.target_start
+        expected_source_end = source_line_no + hunk.source_length
+        expected_target_end = target_line_no + hunk.target_length
 
-        for line in diff:
+        for diff_line_no, line in diff:
             if encoding is not None:
                 line = line.decode(encoding)
             valid_line = RE_HUNK_BODY_LINE.match(line)
@@ -193,6 +195,8 @@ class PatchedFile(list):
                 raise UnidiffParseError('Hunk diff line expected: %s' % line)
 
             line_type = valid_line.group('line_type')
+            if line_type == LINE_TYPE_EMPTY:
+                line_type = LINE_TYPE_CONTEXT
             value = valid_line.group('value')
             original_line = Line(value, line_type=line_type)
             if line_type == LINE_TYPE_ADDED:
@@ -212,10 +216,12 @@ class PatchedFile(list):
                 original_line = None
 
             if original_line:
+                original_line.diff_line_no = diff_line_no
                 hunk.append(original_line)
 
-            # check hunk len(old_lines) and len(new_lines) are ok
-            if hunk.is_valid():
+            # if hunk source/target lengths are ok, hunk is complete
+            if (source_line_no == expected_source_end
+                    and target_line_no == expected_target_end):
                 break
 
         self.append(hunk)
@@ -284,7 +290,8 @@ class PatchSet(list):
     def _parse(self, diff, encoding):
         current_file = None
 
-        for line in diff:
+        diff = enumerate(diff, 1)
+        for unused_diff_line_no, line in diff:
             if encoding is not None:
                 line = line.decode(encoding)
             # check for source file header
@@ -317,9 +324,9 @@ class PatchSet(list):
                 current_file._parse_hunk(line, diff, encoding)
 
     @classmethod
-    def from_filename(cls, filename, encoding=DEFAULT_ENCODING):
+    def from_filename(cls, filename, encoding=DEFAULT_ENCODING, errors=None):
         """Return a PatchSet instance given a diff filename."""
-        with open_file(filename, 'r', encoding=encoding) as f:
+        with open_file(filename, 'r', encoding=encoding, errors=errors) as f:
             instance = cls(f)
         return instance
 
