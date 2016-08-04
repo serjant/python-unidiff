@@ -1,0 +1,1401 @@
+diff --git a/web/dashboard-frontend/Gruntfile.js b/web/dashboard-frontend/Gruntfile.js
+new file mode 100644
+index 0000000..c4e9c67
+--- /dev/null
++++ b/web/dashboard-frontend/Gruntfile.js
+@@ -0,0 +1,429 @@
++/// Need to Install Grunt Globally
++/// npm install -g grunt-cli
++module.exports = function (grunt) {
++    "use strict";
++    var bannerContent = '/*! <%= pkg.name %> v<%= pkg.version %> - ' +
++        '<%= grunt.template.today("yyyy-mm-dd") %> \n' +
++        ' *  License: <%= pkg.license %> */\n';
++
++    var name = '<%= pkg.name %>-v<%= pkg.version%>';
++
++    var lessFiles = [
++        "css/global.less" ,
++        "css/listview.less" ,
++        "css/listview3.0.less" ,
++        "css/workflow.less",
++        "css/translations-dashboard.less" ,
++        "css/file_tab_lv.less" ,
++        "css/domain_lv.less" ,
++        "css/translators.less" ,
++        "css/tools.less" ,
++        "css/glossary.less" ,
++        "css/icon-list.less",
++        "css/settings.less",
++        "css/admin.less",
++        "css/adminDashboard.less",
++        "css/wrapped_html.less",
++        "css/context_files.less",
++        "css/globalSearch.less",
++        "css/resourceAssignment.less",
++        "css/gettingStarted.less"
++    ];
++
++
++    var doLessFiles = function (path) {
++        var serverPath;
++        var result = {};
++        var localPath = "web/static/dashboard-2.0/";
++        if (path !== undefined) {
++            serverPath = path;
++
++        } else {
++            serverPath = SERVER_PATH + "/dashboard-2.0/";
++
++        }
++        lessFiles .forEach(function (source) {
++            var destination = source.replace("less", "css");
++            result[serverPath + destination] = localPath + source;
++
++        });
++        result[serverPath + "bootstrap3.0/less/bootstrap.css"] = localPath + "bootstrap3.0/less/bootstrap.less";
++        result[serverPath + "bootstrap-switch/bootstrap-switch.css"] = localPath + "bootstrap-switch/bootstrap-switch.less";
++        result[serverPath + "twitter-typeahead/typeahead.css"] = localPath + "twitter-typeahead/typeahead.less";
++        result[serverPath + "bootstrap-multiselect/bootstrap-multiselect.css"] = localPath + "bootstrap-multiselect/bootstrap-multiselect.less";
++        result[serverPath + "font-awesome/less/font-awesome.css"] = localPath + "font-awesome/less/font-awesome.less";
++        result[serverPath + "bootstrap-slider/bootstrap-slider.css"] = localPath + "bootstrap-slider/bootstrap-slider.less";
++        return result;
++
++    };
++
++    var doR2Files = function(path) {
++
++        var result = {};
++        var serverPath;
++        if (path !== undefined) {
++            serverPath = path;
++
++        } else {
++            serverPath = SERVER_PATH + "/dashboard-2.0/";
++
++        }
++
++        result[serverPath + "bootstrap3.0/less/bootstrap.css"] = serverPath + "bootstrap3.0/less/bootstrap.css";
++        result[serverPath + "bootstrap-switch/bootstrap-switch.css"] = serverPath + "bootstrap-switch/bootstrap-switch.css";
++        result[serverPath + "twitter-typeahead/typeahead.css"] = serverPath + "twitter-typeahead/typeahead.css";
++        result[serverPath + "bootstrap-multiselect/bootstrap-multiselect.css"] = serverPath + "bootstrap-multiselect/bootstrap-multiselect.css";
++        result[serverPath + "font-awesome/less/font-awesome.css"] = serverPath + "font-awesome/less/font-awesome.css";
++        result[serverPath + "bootstrap-slider/bootstrap-slider.css"] = serverPath + "bootstrap-slider/bootstrap-slider.css";
++        return result;
++
++    };
++
++
++
++    // SET WA_SERVER_PATH_STATIC and NODE_ENV in you bash profile
++
++    if (process.env.NODE_ENV === "development") {
++
++        var SERVER_PATH = process.env.WA_SERVER_PATH_STATIC;
++
++    }
++
++    grunt.initConfig({
++
++        serverPath : {
++            location : SERVER_PATH
++        },
++
++        jshint: {
++
++            all: [
++                'web/static/js/lib/messaging/**/*.js' ,
++                'web/static/js/lib/mixins/**/*.js' ,
++                'web/static/js/lib/models/**/*.js' ,
++                'web/static/js/lib/wizard/**/*.js' ,
++                'web/static/js/lib/views/smtFormView.js' ,
++                'web/static/js/app/appMain/**/*.js' ,
++                'web/static/js/app/admin/accounts_agencies/**/*.js'  ,
++                'web/static/js/app/admin/invoicing/**/*.js'  ,
++                'web/static/js/app/listview/**/*.js',
++                'web/static/js/app/people/sso/**/*.js',
++                'web/static/js/app/projects/summary/**/*.js',
++                'web/static/js/app/translations/patterns/**/*.js',
++                'web/static/js/app/users/registration/**/*.js',
++                'web/static/js/app/gdn/domains/**/*.js',
++                'web/static/js/app/workflow/**/*.js',
++                'web/static/js/app/reports/wordcount/**/*.js',
++                'web/static/js/app/appMain/shoppingCart/**/*.js'
++            ],
++            options: {
++                jshintrc: '.jshintrc',
++
++                force:true
++            }
++        },
++
++        uglify: {
++            my_target: {
++                files: [{src: ['web/static/js/vendor/require.js/require.js', 'web/static/tools/require-config.js', 'web/static/js/vendor/define.js' , 'web/static/js/vendor/loggly/loggly.tracker.js'], dest: grunt.option("dest")}]
++            }
++        },
++
++        mocha: {
++
++            options : {
++
++                log: 'true',
++                reporter: 'Spec'
++            } ,
++            lib : {
++
++                src : ['jstest/lib.html'],
++                options : {
++                    log: 'true',
++                    reporter: 'Spec'
++                },
++                run: true
++            } ,
++            app : {
++                src : ['jstest/app.html'],
++                options : {
++                    log: 'true',
++                    reporter: 'Spec'
++                },
++                run: true
++            },
++            listview : {
++                src : ['jstest/listview.html'],
++                options : {
++                    log: 'true',
++                    reporter: 'Spec'
++                },
++                run: true
++            }
++
++        },
++
++        r2 : {
++
++            dev : {
++                files : doR2Files()
++            }
++
++
++
++        },
++
++        watch: {
++
++            all : {
++                files: ['web/static/js/**/*.js', 'jstest/spec/**/*.js' ,  'web/static/dashboard-2.0/**/*.less' , 'WEB-INF/**/*.jsp'],
++                tasks : ['less:development'  ,   'mocha' ,  'jshint'  ]
++            },
++
++            design: {
++                files: [ 'web/static/dashboard-2.0/**/*.less' , 'web/static/dashboard-2.0/bootstrap/less/variables.less'],
++                tasks: ['less:development' ]
++
++            } ,
++
++            design_flip: {
++                files: [ 'web/static/dashboard-2.0/**/*.less' , 'web/static/dashboard-2.0/bootstrap/less/variables.less'],
++                tasks: ['flip' ]
++            } ,
++
++            lib : {
++                files: ['web/static/js/lib/**/*.js', 'jstest/spec/lib/**/*.js' ],
++                tasks : ['mocha:lib']
++            } ,
++            app : {
++                files: ['web/static/js/app/**/*.js', 'jstest/spec/app/**/*.js'],
++                tasks : ['mocha:app']
++            },
++            listview : {
++                files: ['web/static/js/app/listview/**/*.js', 'jstest/spec/app/listview/**/*.js'],
++                tasks : ['mocha:listview']
++            },
++
++            jshint : {
++                files: ['web/static/js/app/**/*.js', 'jstest/spec/lib/**/*.js' ],
++                tasks : ['jshint']
++            }
++
++        },
++
++
++        less: {
++
++            development: {
++                options: {
++                    dumpLineNumbers: "all"
++                },
++                files: doLessFiles()
++            } ,
++
++            flip : {
++                options: {
++                    dumpLineNumbers: "all",
++                    modifyVars : "direction=right"
++                },
++                files : doLessFiles()
++            }
++
++        },
++
++        docco: {
++
++            debug: {
++                src: ['web/static/js/lib/**/*.js' , 'web/static/js/app/**/*.js'],
++                options: {
++                    output: 'docs/'
++                }
++
++            }
++
++        },
++
++        shell: {
++            'mocha-phantomjs-app': {
++                command: ['mocha-phantomjs -R xunit jstest/app.html'].join('&&'),
++                options: {
++                    stdout: true,
++                    callback: function log(err, stdout, stderr, cb) {
++                        var path = grunt.option("resultTestFileApp");
++                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
++                        var xml = pattern.exec(stdout);
++                        grunt.file.write(path, xml[0]);
++                        cb();
++                    }
++                }
++            },
++            'mocha-phantomjs-listview': {
++                command: ['mocha-phantomjs -R xunit jstest/listview.html'].join('&&'),
++                options: {
++                    stdout: true,
++                    callback: function log(err, stdout, stderr, cb) {
++                        var path = grunt.option("resultTestFileListView");
++                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
++                        var xml = pattern.exec(stdout);
++                        grunt.file.write(path, xml[0]);
++                        cb();
++                    }
++                }
++            },
++
++            'mocha-phantomjs-lib': {
++                command: ['mocha-phantomjs -R xunit jstest/lib.html'].join('&&'),
++                options: {
++                    stdout: true,
++                    callback: function log(err, stdout, stderr, cb) {
++                        var path = grunt.option("resultTestFileLib");
++                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
++                        var xml = pattern.exec(stdout);
++                        grunt.file.write(path, xml[0]);
++                        cb();
++                    }
++
++                }
++            }
++        },
++
++        complexity: {
++            generic: {
++                src: ['web/static/js/lib/**/*.js', 'web/static/js/app/**/*.js'],
++                options: {
++                    breakOnErrors: true,
++                    jsLintXML: 'report.xml',         // create XML JSLint-like report
++                    checkstyleXML: 'checkstyle.xml', // create checkstyle report
++                    errorsOnly: false,               // show only maintainability errors
++                    cyclomatic: [3, 7, 12],          // or optionally a single value, like 3
++                    halstead: [8, 13, 20],           // or optionally a single value, like 8
++                    maintainability: 100
++                }
++            }
++        },
++
++        blanket_mocha: {
++
++            all: [ 'jstest/lib.html' ],
++
++            options: {
++
++                threshold: 0,
++
++                reporter: 'Spec'
++
++            }
++        }
++
++    });
++
++    grunt.loadNpmTasks('grunt-contrib-jshint');
++
++    grunt.loadNpmTasks('grunt-contrib-watch');
++
++    grunt.loadNpmTasks('grunt-contrib-uglify');
++
++    grunt.loadNpmTasks('grunt-mocha');
++
++    grunt.loadNpmTasks('grunt-contrib-less');
++
++    grunt.loadNpmTasks('grunt-docco');
++
++    grunt.loadNpmTasks('grunt-r2');
++
++    grunt.loadNpmTasks('grunt-blanket-mocha');
++
++    grunt.loadNpmTasks('grunt-shell');
++
++    grunt.loadNpmTasks('grunt-complexity');
++
++    grunt.registerTask('default', ['jshint' , 'mocha' , 'less' , 'docco']);
++
++    grunt.registerTask('test', ['mocha' , 'jshint']);
++
++    grunt.registerTask('dev', ['watch']);
++
++    grunt.registerTask("dev_lib" , ["watch:lib"]);
++
++    grunt.registerTask("dev_app" , ["watch:app"]);
++
++    grunt.registerTask("flip" , ["less:flip" , "r2"] );
++
++    grunt.registerTask('build' , "build command called from ant" , function() {
++
++        //SERVER_PATH = path;
++        var serverPath = grunt.option("serverPath");
++        grunt.config.set("less.development.files" , doLessFiles(serverPath));
++        grunt.task.run(['less']);
++
++    });
++
++
++
++    grunt.registerTask('design', ['watch:design']);
++
++    grunt.registerTask('design_flip', ['watch:design_flip']);
++
++    grunt.registerTask("runCIUnitTests" , "Run app mocha tests" , function(p) {
++
++            var options = {};
++
++            var obj =  grunt.option.flags();
++
++            for (var index in obj) {
++
++                var arr = obj[index].split("=");
++
++                options[arr[0].replace("--" ,"")] = arr[1];
++
++            }
++
++            if (options.app === undefined || options.lib === undefined || options.listview === undefined) {
++
++                grunt.log.error("Need to specify paths for lib, app and listview");
++                return false;
++            }
++
++            grunt.option("resultTestFileApp" , options.app);
++            grunt.option("resultTestFileListView" , options.listview);
++            grunt.option("resultTestFileLib" , options.lib);
++            grunt.task.run(["shell:mocha-phantomjs-app"]);
++            grunt.task.run(["shell:mocha-phantomjs-lib"]);
++            grunt.task.run(["shell:mocha-phantomjs-listview"]);
++
++    });
++
++    grunt.registerTask("minify-core-js" , "Run app mocha tests" , function(p) {
++
++        var options = {};
++
++        var obj =  grunt.option.flags();
++
++        for (var index in obj) {
++
++            var arr = obj[index].split("=");
++
++            options[arr[0].replace("--" ,"")] = arr[1];
++
++        }
++
++        if (options.dest === undefined) {
++
++            grunt.log.error("Need to specify destination path");
++            return false;
++        }
++
++        grunt.option("dest" , options.dest);
++        grunt.task.run(["uglify"]);
++
++    });
++
++
++    grunt.registerTask('hint' , ['watch:jshint']);
++
++    grunt.registerTask("bamboo" , ["runCIUnitTests"]);
++
++
++};
++
+diff --git a/web/stat/Gruntfile.js b/web/stat/Gruntfile.js
+deleted file mode 100644
+index c4e9c67..0000000
+--- a/web/stat/Gruntfile.js
++++ /dev/null
+@@ -1,429 +0,0 @@
+-/// Need to Install Grunt Globally
+-/// npm install -g grunt-cli
+-module.exports = function (grunt) {
+-    "use strict";
+-    var bannerContent = '/*! <%= pkg.name %> v<%= pkg.version %> - ' +
+-        '<%= grunt.template.today("yyyy-mm-dd") %> \n' +
+-        ' *  License: <%= pkg.license %> */\n';
+-
+-    var name = '<%= pkg.name %>-v<%= pkg.version%>';
+-
+-    var lessFiles = [
+-        "css/global.less" ,
+-        "css/listview.less" ,
+-        "css/listview3.0.less" ,
+-        "css/workflow.less",
+-        "css/translations-dashboard.less" ,
+-        "css/file_tab_lv.less" ,
+-        "css/domain_lv.less" ,
+-        "css/translators.less" ,
+-        "css/tools.less" ,
+-        "css/glossary.less" ,
+-        "css/icon-list.less",
+-        "css/settings.less",
+-        "css/admin.less",
+-        "css/adminDashboard.less",
+-        "css/wrapped_html.less",
+-        "css/context_files.less",
+-        "css/globalSearch.less",
+-        "css/resourceAssignment.less",
+-        "css/gettingStarted.less"
+-    ];
+-
+-
+-    var doLessFiles = function (path) {
+-        var serverPath;
+-        var result = {};
+-        var localPath = "web/static/dashboard-2.0/";
+-        if (path !== undefined) {
+-            serverPath = path;
+-
+-        } else {
+-            serverPath = SERVER_PATH + "/dashboard-2.0/";
+-
+-        }
+-        lessFiles .forEach(function (source) {
+-            var destination = source.replace("less", "css");
+-            result[serverPath + destination] = localPath + source;
+-
+-        });
+-        result[serverPath + "bootstrap3.0/less/bootstrap.css"] = localPath + "bootstrap3.0/less/bootstrap.less";
+-        result[serverPath + "bootstrap-switch/bootstrap-switch.css"] = localPath + "bootstrap-switch/bootstrap-switch.less";
+-        result[serverPath + "twitter-typeahead/typeahead.css"] = localPath + "twitter-typeahead/typeahead.less";
+-        result[serverPath + "bootstrap-multiselect/bootstrap-multiselect.css"] = localPath + "bootstrap-multiselect/bootstrap-multiselect.less";
+-        result[serverPath + "font-awesome/less/font-awesome.css"] = localPath + "font-awesome/less/font-awesome.less";
+-        result[serverPath + "bootstrap-slider/bootstrap-slider.css"] = localPath + "bootstrap-slider/bootstrap-slider.less";
+-        return result;
+-
+-    };
+-
+-    var doR2Files = function(path) {
+-
+-        var result = {};
+-        var serverPath;
+-        if (path !== undefined) {
+-            serverPath = path;
+-
+-        } else {
+-            serverPath = SERVER_PATH + "/dashboard-2.0/";
+-
+-        }
+-
+-        result[serverPath + "bootstrap3.0/less/bootstrap.css"] = serverPath + "bootstrap3.0/less/bootstrap.css";
+-        result[serverPath + "bootstrap-switch/bootstrap-switch.css"] = serverPath + "bootstrap-switch/bootstrap-switch.css";
+-        result[serverPath + "twitter-typeahead/typeahead.css"] = serverPath + "twitter-typeahead/typeahead.css";
+-        result[serverPath + "bootstrap-multiselect/bootstrap-multiselect.css"] = serverPath + "bootstrap-multiselect/bootstrap-multiselect.css";
+-        result[serverPath + "font-awesome/less/font-awesome.css"] = serverPath + "font-awesome/less/font-awesome.css";
+-        result[serverPath + "bootstrap-slider/bootstrap-slider.css"] = serverPath + "bootstrap-slider/bootstrap-slider.css";
+-        return result;
+-
+-    };
+-
+-
+-
+-    // SET WA_SERVER_PATH_STATIC and NODE_ENV in you bash profile
+-
+-    if (process.env.NODE_ENV === "development") {
+-
+-        var SERVER_PATH = process.env.WA_SERVER_PATH_STATIC;
+-
+-    }
+-
+-    grunt.initConfig({
+-
+-        serverPath : {
+-            location : SERVER_PATH
+-        },
+-
+-        jshint: {
+-
+-            all: [
+-                'web/static/js/lib/messaging/**/*.js' ,
+-                'web/static/js/lib/mixins/**/*.js' ,
+-                'web/static/js/lib/models/**/*.js' ,
+-                'web/static/js/lib/wizard/**/*.js' ,
+-                'web/static/js/lib/views/smtFormView.js' ,
+-                'web/static/js/app/appMain/**/*.js' ,
+-                'web/static/js/app/admin/accounts_agencies/**/*.js'  ,
+-                'web/static/js/app/admin/invoicing/**/*.js'  ,
+-                'web/static/js/app/listview/**/*.js',
+-                'web/static/js/app/people/sso/**/*.js',
+-                'web/static/js/app/projects/summary/**/*.js',
+-                'web/static/js/app/translations/patterns/**/*.js',
+-                'web/static/js/app/users/registration/**/*.js',
+-                'web/static/js/app/gdn/domains/**/*.js',
+-                'web/static/js/app/workflow/**/*.js',
+-                'web/static/js/app/reports/wordcount/**/*.js',
+-                'web/static/js/app/appMain/shoppingCart/**/*.js'
+-            ],
+-            options: {
+-                jshintrc: '.jshintrc',
+-
+-                force:true
+-            }
+-        },
+-
+-        uglify: {
+-            my_target: {
+-                files: [{src: ['web/static/js/vendor/require.js/require.js', 'web/static/tools/require-config.js', 'web/static/js/vendor/define.js' , 'web/static/js/vendor/loggly/loggly.tracker.js'], dest: grunt.option("dest")}]
+-            }
+-        },
+-
+-        mocha: {
+-
+-            options : {
+-
+-                log: 'true',
+-                reporter: 'Spec'
+-            } ,
+-            lib : {
+-
+-                src : ['jstest/lib.html'],
+-                options : {
+-                    log: 'true',
+-                    reporter: 'Spec'
+-                },
+-                run: true
+-            } ,
+-            app : {
+-                src : ['jstest/app.html'],
+-                options : {
+-                    log: 'true',
+-                    reporter: 'Spec'
+-                },
+-                run: true
+-            },
+-            listview : {
+-                src : ['jstest/listview.html'],
+-                options : {
+-                    log: 'true',
+-                    reporter: 'Spec'
+-                },
+-                run: true
+-            }
+-
+-        },
+-
+-        r2 : {
+-
+-            dev : {
+-                files : doR2Files()
+-            }
+-
+-
+-
+-        },
+-
+-        watch: {
+-
+-            all : {
+-                files: ['web/static/js/**/*.js', 'jstest/spec/**/*.js' ,  'web/static/dashboard-2.0/**/*.less' , 'WEB-INF/**/*.jsp'],
+-                tasks : ['less:development'  ,   'mocha' ,  'jshint'  ]
+-            },
+-
+-            design: {
+-                files: [ 'web/static/dashboard-2.0/**/*.less' , 'web/static/dashboard-2.0/bootstrap/less/variables.less'],
+-                tasks: ['less:development' ]
+-
+-            } ,
+-
+-            design_flip: {
+-                files: [ 'web/static/dashboard-2.0/**/*.less' , 'web/static/dashboard-2.0/bootstrap/less/variables.less'],
+-                tasks: ['flip' ]
+-            } ,
+-
+-            lib : {
+-                files: ['web/static/js/lib/**/*.js', 'jstest/spec/lib/**/*.js' ],
+-                tasks : ['mocha:lib']
+-            } ,
+-            app : {
+-                files: ['web/static/js/app/**/*.js', 'jstest/spec/app/**/*.js'],
+-                tasks : ['mocha:app']
+-            },
+-            listview : {
+-                files: ['web/static/js/app/listview/**/*.js', 'jstest/spec/app/listview/**/*.js'],
+-                tasks : ['mocha:listview']
+-            },
+-
+-            jshint : {
+-                files: ['web/static/js/app/**/*.js', 'jstest/spec/lib/**/*.js' ],
+-                tasks : ['jshint']
+-            }
+-
+-        },
+-
+-
+-        less: {
+-
+-            development: {
+-                options: {
+-                    dumpLineNumbers: "all"
+-                },
+-                files: doLessFiles()
+-            } ,
+-
+-            flip : {
+-                options: {
+-                    dumpLineNumbers: "all",
+-                    modifyVars : "direction=right"
+-                },
+-                files : doLessFiles()
+-            }
+-
+-        },
+-
+-        docco: {
+-
+-            debug: {
+-                src: ['web/static/js/lib/**/*.js' , 'web/static/js/app/**/*.js'],
+-                options: {
+-                    output: 'docs/'
+-                }
+-
+-            }
+-
+-        },
+-
+-        shell: {
+-            'mocha-phantomjs-app': {
+-                command: ['mocha-phantomjs -R xunit jstest/app.html'].join('&&'),
+-                options: {
+-                    stdout: true,
+-                    callback: function log(err, stdout, stderr, cb) {
+-                        var path = grunt.option("resultTestFileApp");
+-                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
+-                        var xml = pattern.exec(stdout);
+-                        grunt.file.write(path, xml[0]);
+-                        cb();
+-                    }
+-                }
+-            },
+-            'mocha-phantomjs-listview': {
+-                command: ['mocha-phantomjs -R xunit jstest/listview.html'].join('&&'),
+-                options: {
+-                    stdout: true,
+-                    callback: function log(err, stdout, stderr, cb) {
+-                        var path = grunt.option("resultTestFileListView");
+-                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
+-                        var xml = pattern.exec(stdout);
+-                        grunt.file.write(path, xml[0]);
+-                        cb();
+-                    }
+-                }
+-            },
+-
+-            'mocha-phantomjs-lib': {
+-                command: ['mocha-phantomjs -R xunit jstest/lib.html'].join('&&'),
+-                options: {
+-                    stdout: true,
+-                    callback: function log(err, stdout, stderr, cb) {
+-                        var path = grunt.option("resultTestFileLib");
+-                        var pattern = /<testsuite[^>]*>((.|[\n\r])*)<\/testsuite>/im;
+-                        var xml = pattern.exec(stdout);
+-                        grunt.file.write(path, xml[0]);
+-                        cb();
+-                    }
+-
+-                }
+-            }
+-        },
+-
+-        complexity: {
+-            generic: {
+-                src: ['web/static/js/lib/**/*.js', 'web/static/js/app/**/*.js'],
+-                options: {
+-                    breakOnErrors: true,
+-                    jsLintXML: 'report.xml',         // create XML JSLint-like report
+-                    checkstyleXML: 'checkstyle.xml', // create checkstyle report
+-                    errorsOnly: false,               // show only maintainability errors
+-                    cyclomatic: [3, 7, 12],          // or optionally a single value, like 3
+-                    halstead: [8, 13, 20],           // or optionally a single value, like 8
+-                    maintainability: 100
+-                }
+-            }
+-        },
+-
+-        blanket_mocha: {
+-
+-            all: [ 'jstest/lib.html' ],
+-
+-            options: {
+-
+-                threshold: 0,
+-
+-                reporter: 'Spec'
+-
+-            }
+-        }
+-
+-    });
+-
+-    grunt.loadNpmTasks('grunt-contrib-jshint');
+-
+-    grunt.loadNpmTasks('grunt-contrib-watch');
+-
+-    grunt.loadNpmTasks('grunt-contrib-uglify');
+-
+-    grunt.loadNpmTasks('grunt-mocha');
+-
+-    grunt.loadNpmTasks('grunt-contrib-less');
+-
+-    grunt.loadNpmTasks('grunt-docco');
+-
+-    grunt.loadNpmTasks('grunt-r2');
+-
+-    grunt.loadNpmTasks('grunt-blanket-mocha');
+-
+-    grunt.loadNpmTasks('grunt-shell');
+-
+-    grunt.loadNpmTasks('grunt-complexity');
+-
+-    grunt.registerTask('default', ['jshint' , 'mocha' , 'less' , 'docco']);
+-
+-    grunt.registerTask('test', ['mocha' , 'jshint']);
+-
+-    grunt.registerTask('dev', ['watch']);
+-
+-    grunt.registerTask("dev_lib" , ["watch:lib"]);
+-
+-    grunt.registerTask("dev_app" , ["watch:app"]);
+-
+-    grunt.registerTask("flip" , ["less:flip" , "r2"] );
+-
+-    grunt.registerTask('build' , "build command called from ant" , function() {
+-
+-        //SERVER_PATH = path;
+-        var serverPath = grunt.option("serverPath");
+-        grunt.config.set("less.development.files" , doLessFiles(serverPath));
+-        grunt.task.run(['less']);
+-
+-    });
+-
+-
+-
+-    grunt.registerTask('design', ['watch:design']);
+-
+-    grunt.registerTask('design_flip', ['watch:design_flip']);
+-
+-    grunt.registerTask("runCIUnitTests" , "Run app mocha tests" , function(p) {
+-
+-            var options = {};
+-
+-            var obj =  grunt.option.flags();
+-
+-            for (var index in obj) {
+-
+-                var arr = obj[index].split("=");
+-
+-                options[arr[0].replace("--" ,"")] = arr[1];
+-
+-            }
+-
+-            if (options.app === undefined || options.lib === undefined || options.listview === undefined) {
+-
+-                grunt.log.error("Need to specify paths for lib, app and listview");
+-                return false;
+-            }
+-
+-            grunt.option("resultTestFileApp" , options.app);
+-            grunt.option("resultTestFileListView" , options.listview);
+-            grunt.option("resultTestFileLib" , options.lib);
+-            grunt.task.run(["shell:mocha-phantomjs-app"]);
+-            grunt.task.run(["shell:mocha-phantomjs-lib"]);
+-            grunt.task.run(["shell:mocha-phantomjs-listview"]);
+-
+-    });
+-
+-    grunt.registerTask("minify-core-js" , "Run app mocha tests" , function(p) {
+-
+-        var options = {};
+-
+-        var obj =  grunt.option.flags();
+-
+-        for (var index in obj) {
+-
+-            var arr = obj[index].split("=");
+-
+-            options[arr[0].replace("--" ,"")] = arr[1];
+-
+-        }
+-
+-        if (options.dest === undefined) {
+-
+-            grunt.log.error("Need to specify destination path");
+-            return false;
+-        }
+-
+-        grunt.option("dest" , options.dest);
+-        grunt.task.run(["uglify"]);
+-
+-    });
+-
+-
+-    grunt.registerTask('hint' , ['watch:jshint']);
+-
+-    grunt.registerTask("bamboo" , ["runCIUnitTests"]);
+-
+-
+-};
+-
+diff --git a/web/stat/web/static/dashboard-2.0/css/flip/flip.less b/web/stat/web/static/dashboard-2.0/css/flip/flip.less
+deleted file mode 100644
+index 221e82f..0000000
+--- a/web/stat/web/static/dashboard-2.0/css/flip/flip.less
++++ /dev/null
+@@ -1,525 +0,0 @@
+-//******************
+-// Flip.less is a collection of LESS mixins to facilitate the CSS
+-// styling of left-to-right and right-to-left compliant websites.
+-//
+-// For more information, visit:
+-// https://wiki.smartling.net/display/DEV/Right-to-Left+Styling
+-//******************
+-
+-// DEVELOPERS: Change this variable to 'left' or 'right'
+-// to test left-to-right and right-to-left styling respectively:
+-
+-@direction: left;
+-
+-
+-//******************
+-// Direction
+-//******************
+-
+-.direction() {
+-  .direction(@direction);
+-  .direction(left) {
+-    direction: ltr;
+-  }
+-  .direction(right) {
+-    direction: rtl;
+-  }
+-}
+-
+-
+-//******************
+-// Float
+-//******************
+-
+-.float(@f) {
+-  .float(@direction; @f);
+-  .float(left; @f) {
+-    float: @f;
+-  }
+-  .float(right; @f) when not (@f = left) and not (@f = right) {
+-    float: @f;
+-  }
+-  .float(right; left) {
+-    float: right;
+-  }
+-  .float(right; right) {
+-    float: left;
+-  }
+-}
+-
+-
+-//******************
+-// Margin
+-//******************
+-
+-// margin shorthand //
+-.margin(@t; @r; @b; @l) {
+-  .margin(@direction; @t; @r; @b; @l);
+-  .margin(left; @t; @r; @b; @l) {
+-      margin: @t @r @b @l;
+-  }
+-  .margin(right; @t; @r; @b; @l) {
+-      margin: @t @l @b @r;
+-  }
+-}
+-.margin(@t; @r; @b) {
+-  .margin(@t; @r; @b; @r);
+-}
+-.margin(@t; @r) {
+-  .margin(@t; @r; @t; @r);
+-}
+-.margin(@t) {
+-  .margin(@t; @t; @t; @t);
+-}
+-
+-// margin-top //
+-.margin-top(@m) {
+-  margin-top: @m;
+-}
+-
+-// margin-bottom //
+-.margin-bottom(@m) {
+-  margin-bottom: @m;
+-}
+-
+-// margin-right //
+-.margin-right(@m) {
+-  .margin-right(@direction; @m);
+-  .margin-right(left; @m) {
+-    margin-right: @m;
+-  }
+-  .margin-right(right; @m) {
+-    margin-left: @m;
+-  }
+-}
+-
+-// margin-left //
+-.margin-left(@m) {
+-  .margin-left(@direction; @m);
+-  .margin-left(left; @m) {
+-    margin-left: @m;
+-  }
+-  .margin-left(right; @m) {
+-    margin-right: @m;
+-  }
+-}
+-
+-
+-//******************
+-// Padding
+-//******************
+-
+-// padding shorthand //
+-.padding(@t; @r; @b; @l) {
+-  .padding(@direction; @t; @r; @b; @l);
+-  .padding(left; @t; @r; @b; @l) {
+-    padding: @t @r @b @l;
+-  }
+-  .padding(right; @t; @r; @b; @l) {
+-    padding: @t @l @b @r;
+-  }
+-}
+-.padding(@t; @r; @b) {
+-  .padding(@t; @r; @b; @r);
+-}
+-.padding(@t; @r) {
+-  .padding(@t; @r; @t; @r);
+-}
+-.padding(@t) {
+-  .padding(@t; @t; @t; @t);
+-}
+-
+-// padding-top //
+-.padding-top(@m) {
+-  padding-top: @m;
+-}
+-
+-// padding-bottom //
+-.padding-bottom(@m) {
+-  padding-bottom: @m;
+-}
+-
+-// padding-right //
+-.padding-right(@m) {
+-  .padding-right(@direction; @m);
+-  .padding-right(left; @m) {
+-    padding-right: @m;
+-  }
+-  .padding-right(right; @m) {
+-    padding-left: @m;
+-  }
+-}
+-
+-// padding-left //
+-.padding-left(@m) {
+-  .padding-left(@direction; @m);
+-  .padding-left(left; @m) {
+-    padding-left: @m;
+-  }
+-  .padding-left(right; @m) {
+-    padding-right: @m;
+-  }
+-}
+-
+-
+-//******************
+-// Text-Align
+-//******************
+-
+-.text-align(@a) {
+-  .text-align(@direction; @a);
+-  .text-align(left; @a) {
+-    text-align: @a;
+-  }
+-  .text-align(right; @a) when not (@a = left) and not (@a = right) {
+-    text-align: @a;
+-  }
+-  .text-align(right; left) {
+-    text-align: right;
+-  }
+-  .text-align(right; right) {
+-    text-align: left;
+-  }
+-}
+-
+-
+-//******************
+-// Background
+-//******************
+-
+-// background-position (single) //
+-.background-position(@h) {
+-  .background-position(@h; @direction);
+-}
+-.background-position(@h; @v) {
+-  .background-position(@h; @v; @direction);
+-}
+-.background-position(@h; @d) when (@d = left), (@d = right) {
+-  .background-position(@h; center; @d);
+-}
+-.background-position(@h; @v; left) {
+-  background-position: @h @v;
+-}
+-.background-position(@h; @v; right) when not (@h = left) and not (@h = right) and not (ispercentage(@h)) and not (@h = 0) {
+-  background-position: @h @v;
+-}
+-.background-position(left; @v; right) {
+-  background-position: right @v;
+-}
+-.background-position(right; @v; right) {
+-  background-position: left @v;
+-}
+-.background-position(@h; @v; right) when (ispercentage(@h)), (@h = 0) {
+-  background-position: (100% - @h) @v;
+-}
+-
+-// background-position (double) //
+-// note that only the first background reacts to the flip //
+-.background-position(@h1; @v1; @h2; @v2) {
+-  .background-position(@h1; @v1; @h2; @v2; @direction);
+-}
+-.background-position(@h1; @v1; @h2; @v2; left) {
+-  background-position: @h1 @v1, @h2 @v2;
+-}
+-.background-position(@h1; @v1; @h2; @v2; right) when not (@h1 = left) and not (@h1 = right) and not (ispercentage(@h1)) and not (@h1 = 0) {
+-  background-position: @h1 @v1, @h2 @v2;
+-}
+-.background-position(left; @v1; @h2; @v2; right) {
+-  background-position: right @v1, @h2 @v2;
+-}
+-.background-position(right; @v1; @h2; @v2; right) {
+-  background-position: left @v1, @h2 @v2;
+-}
+-.background-position(@h1; @v1; @h2; @v2; right) when (ispercentage(@h1)), (@h1 = 0) {
+-  background-position: (100% - @h1) @v1, @h2 @v2;
+-}
+-
+-// background-image //
+-// if there are three arguments, we really assume the middle one is left|right //
+-.background-image(@i) {
+-  background-image: url('@{i}');
+-}
+-.background-image(@a; @b; @c) {
+-  .background-image(@direction; @a; @b; @c);
+-}
+-.background-image(left; @a; @b; @c) {
+-  background-image: url('@{a}@{b}@{c}');
+-}
+-.background-image(right; @a; @b; @c) when not (@b = left) and not (@b = right) {
+-  background-image: url('@{a}@{b}@{c}');
+-}
+-.background-image(right; @a; left; @c) {
+-  background-image: url('@{a}right@{c}');
+-}
+-.background-image(right; @a; right; @c) {
+-  background-image: url('@{a}left@{c}');
+-}
+-
+-
+-//******************
+-// Directional Helper Class
+-//******************
+-
+-.directional {
+-  .directional(@d) when not (@d = right) {
+-    // we don't do anything
+-  }
+-  .directional(right) {
+-    -moz-transform: scaleX(-1);
+-    -webkit-transform: scaleX(-1);
+-    -o-transform: scaleX(-1);
+-    transform: scaleX(-1);
+-    -ms-filter: fliph;
+-    filter: fliph;
+-  }
+-  .directional(@direction);
+-}
+-
+-
+-//******************
+-// Positioning
+-//******************
+-
+-// left //
+-.left(@p) {
+-  .left(@direction; @p);
+-}
+-.left(left; @p) {
+-  left: @p;
+-}
+-.left(right; @p) {
+-  right: @p;
+-}
+-
+-// right //
+-.right(@p) {
+-  .right(@direction; @p);
+-}
+-.right(left; @p) {
+-  right: @p;
+-}
+-.right(right; @p) {
+-  left: @p;
+-}
+-
+-
+-//******************
+-// Border
+-//******************
+-
+-// border left //
+-.border-left(@a; @b; @c) when not (@a = left) and not (@a = right) {
+-  .border-left(@direction; @a; @b; @c);
+-}
+-.border-left(left; @a; @b; @c) {
+-  border-left: @a @b @c;
+-}
+-.border-left(right; @a; @b; @c) {
+-  border-right: @a @b @c;
+-}
+-
+-.border-left(@a; @b) when not (@a = left) and not (@a = right) {
+-  .border-left(@direction; @a; @b);
+-}
+-.border-left(left; @a; @b) {
+-  border-left: @a @b;
+-}
+-.border-left(right; @a; @b) {
+-  border-right: @a @b;
+-}
+-
+-.border-left(@a)  when not (@a = left) and not (@a = right) {
+-  .border-left(@direction; @a);
+-}
+-.border-left(left; @a) {
+-  border-left: @a;
+-}
+-.border-left(right; @a) {
+-  border-right: @a;
+-}
+-
+-// border-right //
+-.border-right(@a; @b; @c) when not (@a = left) and not (@a = right) {
+-  .border-right(@direction; @a; @b; @c);
+-}
+-.border-right(left; @a; @b; @c) {
+-  border-right: @a @b @c;
+-}
+-.border-right(right; @a; @b; @c) {
+-  border-left: @a @b @c;
+-}
+-
+-.border-right(@a; @b) when not (@a = left) and not (@a = right) {
+-  .border-right(@direction; @a; @b);
+-}
+-.border-right(left; @a; @b) {
+-  border-right: @a @b;
+-}
+-.border-right(right; @a; @b) {
+-  border-left: @a @b;
+-}
+-
+-.border-right(@a) when not (@a = left) and not (@a = right) {
+-  .border-right(@direction; @a);
+-}
+-.border-right(left; @a) {
+-  border-right: @a;
+-}
+-.border-right(right; @a) {
+-  border-left: @a;
+-}
+-
+-
+-//******************
+-// Border Radius
+-//******************
+-
+-// border-top-left-radius //
+-.border-top-left-radius(@r) {
+-  .border-top-left-radius(@direction; @r);
+-}
+-.border-top-left-radius(left; @r) {
+-  border-top-left-radius: @r;
+-  -webkit-border-top-left-radius: @r;
+-  -moz-border-radius-topleft: @r;
+-}
+-.border-top-left-radius(right; @r) {
+-  .border-top-right-radius(left; @r);
+-}
+-
+-// border-top-right-radius //
+-.border-top-right-radius(@r) {
+-  .border-top-right-radius(@direction; @r);
+-}
+-.border-top-right-radius(left; @r) {
+-  border-top-right-radius: @r;
+-  -webkit-border-top-right-radius: @r;
+-  -moz-border-radius-topright: @r;
+-}
+-.border-top-right-radius(right; @r) {
+-  .border-top-left-radius(left; @r);
+-}
+-
+-// border-bottom-right-radius //
+-.border-bottom-right-radius(@r) {
+-  .border-bottom-right-radius(@direction; @r);
+-}
+-.border-bottom-right-radius(left; @r) {
+-  border-bottom-right-radius: @r;
+-  -webkit-border-bottom-right-radius: @r;
+-  -moz-border-radius-bottomright: @r;
+-}
+-.border-bottom-right-radius(right; @r) {
+-  .border-bottom-left-radius(left; @r)
+-}
+-
+-// border-bottom-left-radius //
+-.border-bottom-left-radius(@r) {
+-  .border-bottom-left-radius(@direction; @r);
+-}
+-.border-bottom-left-radius(left; @r) {
+-  border-bottom-left-radius: @r;
+-  -webkit-border-bottom-left-radius: @r;
+-  -moz-border-radius-bottomleft: @r;
+-}
+-.border-bottom-left-radius(right; @r) {
+-  .border-bottom-right-radius(left; @r);
+-}
+-
+-// shorthand border-radius //
+-.border-radius(@tl; @tr; @br; @bl) {
+-  .border-radius(@direction; @tl; @tr; @br; @bl);
+-}
+-.border-radius(@tl; @tr; @br) {
+-  .border-radius(@direction; @tl; @tr; @br; @tr);
+-}
+-.border-radius(@tl; @tr) {
+-  .border-radius(@direction; @tl; @tr; @tl; @tr);
+-}
+-.border-radius(@tl) {
+-  .border-radius(@direction; @tl; @tl; @tl; @tl);
+-}
+-.border-radius(left; @tl; @tr; @br; @bl) {
+-  border-radius: @tl @tr @br @bl;
+-  -webkit-border-radius: @tl @tr @br @bl;
+-  -moz-border-radius: @tl @tr @br @bl;
+-}
+-.border-radius(right; @tl; @tr; @br; @bl) {
+-  .border-radius(left; @tr; @tl; @bl; @br);
+-}
+-
+-// border-top-radius helper //
+-.border-top-radius(@r) {
+-  .border-top-left-radius(@r);
+-  .border-top-right-radius(@r);
+-}
+-
+-// border-bottom-radius helper //
+-.border-bottom-radius(@r) {
+-  .border-bottom-left-radius(@r);
+-  .border-bottom-right-radius(@r);
+-}
+-
+-
+-//******************
+-// Box Shaddow
+-//******************
+-
+-.box-shadow(@h; @v) when not (@h = left) and not (@h = right) {
+-  .box-shadow(@direction; @h; @v;);
+-}
+-.box-shadow(@h; @v; @a) when not (@h = left) and not (@h = right) {
+-  .box-shadow(@direction; @h; @v; @a);
+-}
+-.box-shadow(@h; @v; @a; @b) when not (@h = left) and not (@h = right) {
+-  .box-shadow(@direction; @h; @v; @a; @b);
+-}
+-.box-shadow(@h; @v; @a; @b; @c) when not (@h = left) and not (@h = right) {
+-  .box-shadow(@direction; @h; @v; @a; @b; @c);
+-}
+-.box-shadow(@h; @v; @a; @b; @c; @d) when not (@h = left) and not (@h = right) {
+-  .box-shadow(@direction; @h; @v; @a; @b; @c; @d);
+-}
+-
+-.box-shadow(left; @h; @v) {
+-  box-shadow: @h @v;
+-  -webkit-box-shadow: @h @v;
+-  -moz-box-shadow: @h @v;
+-}
+-.box-shadow(left; @h; @v; @a) {
+-  box-shadow: @h @v @a;
+-  -webkit-box-shadow: @h @v @a;
+-  -moz-box-shadow: @h @v @a;
+-}
+-.box-shadow(left; @h; @v; @a; @b) {
+-  box-shadow: @h @v @a @b;
+-  -webkit-box-shadow: @h @v @a @b;
+-  -moz-box-shadow: @h @v @a @b;
+-}
+-.box-shadow(left; @h; @v; @a; @b; @c) {
+-  box-shadow: @h @v @a @b @c;
+-  -webkit-box-shadow: @h @v @a @b @c;
+-  -moz-box-shadow: @h @v @a @b @c;
+-}
+-.box-shadow(left; @h; @v; @a; @b; @c; @d) {
+-  box-shadow: @h @v @a @b @c @d;
+-  -webkit-box-shadow: @h @v @a @b @c @d;
+-  -moz-box-shadow: @h @v @a @b @c @d;
+-}
+-
+-.box-shadow(right; @h; @v) {
+-  .box-shadow(left; -1 * @h; @v);
+-}
+-.box-shadow(right; @h; @v; @a) {
+-  .box-shadow(left; -1 * @h; @v; @a);
+-}
+-.box-shadow(right; @h; @v; @a; @b) {
+-  .box-shadow(left; -1 * @h; @v; @a; @b);
+-}
+-.box-shadow(right; @h; @v; @a; @b; @c) {
+-  .box-shadow(left; -1 * @h; @v; @a; @b; @c);
+-}
+-.box-shadow(right; @h; @v; @a; @b; @c; @d) {
+-  .box-shadow(left; -1 * @h; @v; @a; @b; @c; @d);
+-}
+-

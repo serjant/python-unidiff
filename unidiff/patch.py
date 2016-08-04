@@ -28,6 +28,8 @@ from __future__ import unicode_literals
 
 import codecs
 import sys
+import os
+import copy
 
 from unidiff.constants import (
     DEFAULT_ENCODING,
@@ -42,11 +44,11 @@ from unidiff.constants import (
 )
 from unidiff.errors import UnidiffParseError
 
-
 PY2 = sys.version_info[0] == 2
 if PY2:
     open_file = codecs.open
     make_str = lambda x: x.encode(DEFAULT_ENCODING)
+
 
     def implements_to_string(cls):
         cls.__unicode__ = cls.__str__
@@ -168,6 +170,7 @@ class PatchedFile(list):
         self.added_lines_content = ""
         self.removed_lines_content = ""
         self.is_renamed_file = is_renamed_file
+        self.is_moved_file = False
 
     def __repr__(self):
         return make_str("<PatchedFile: %s>") % make_str(self.path)
@@ -205,15 +208,15 @@ class PatchedFile(list):
                 original_line.target_line_no = target_line_no
                 target_line_no += 1
                 self.added_lines_content = "{0}\n{1}".format(
-                    self.added_lines_content,
-                    value
+                        self.added_lines_content,
+                        value
                 )
             elif line_type == LINE_TYPE_REMOVED:
                 original_line.source_line_no = source_line_no
                 source_line_no += 1
-                self.removed_lines = "{0}\n{1}".format(
-                    self.removed_lines_content,
-                    value
+                self.removed_lines_content = "{0}\n{1}".format(
+                        self.removed_lines_content,
+                        value
                 )
             elif line_type == LINE_TYPE_CONTEXT:
                 original_line.target_line_no = target_line_no
@@ -229,7 +232,7 @@ class PatchedFile(list):
 
             # if hunk source/target lengths are ok, hunk is complete
             if (source_line_no == expected_source_end
-                    and target_line_no == expected_target_end):
+                and target_line_no == expected_target_end):
                 break
 
         self.append(hunk)
@@ -241,10 +244,10 @@ class PatchedFile(list):
                 self.target_file.startswith('b/')):
             filepath = self.source_file[2:]
         elif (self.source_file.startswith('a/') and
-                self.target_file == '/dev/null'):
+                      self.target_file == '/dev/null'):
             filepath = self.source_file[2:]
         elif (self.target_file.startswith('b/') and
-                self.source_file == '/dev/null'):
+                      self.source_file == '/dev/null'):
             filepath = self.target_file[2:]
         else:
             filepath = self.source_file
@@ -337,6 +340,18 @@ class PatchSet(list):
                 if current_file is None:
                     raise UnidiffParseError('Unexpected hunk found: %s' % line)
                 current_file._parse_hunk(line, diff, encoding)
+
+        # detect moved files
+        for patched_file in self:
+            if patched_file.is_added_file:
+                file_name = os.path.basename(patched_file.path)
+                compared_files = [compared_file for compared_file in self.removed_files \
+                                  if os.path.basename(compared_file.path) == file_name and \
+                                  patched_file.added_lines_content == compared_file.removed_lines_content]
+
+                if compared_files:
+                    compared_files[0].is_moved_file = True
+                    patched_file.is_moved_file = True
 
     @classmethod
     def from_filename(cls, filename, encoding=DEFAULT_ENCODING, errors=None):

@@ -115,6 +115,18 @@ class TestUnidiffParser(unittest.TestCase):
         with open(self.sample_bad_file) as diff_file:
             self.assertRaises(UnidiffParseError, PatchSet, diff_file)
 
+    def test_moved_files(self):
+        tests_dir = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(tests_dir, 'samples', 'sample4.diff')
+        with codecs.open(file_path, 'r', encoding='utf-8') as diff_file:
+            res = PatchSet(diff_file)
+
+        self.assertTrue(res[0].is_added_file)
+        self.assertTrue(res[1].is_removed_file)
+        self.assertTrue(res[0].is_moved_file)
+        self.assertTrue(res[1].is_moved_file)
+        self.assertFalse(res[2].is_moved_file)
+
     def test_diff_lines_linenos(self):
         with open(self.sample_file, 'rb') as diff_file:
             res = PatchSet(diff_file, encoding='utf-8')
