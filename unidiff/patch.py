@@ -171,6 +171,8 @@ class PatchedFile(list):
         self.removed_lines_content = ""
         self.is_renamed_file = is_renamed_file
         self.is_moved_file = False
+        self.moved_from_path = None
+        self.moved_to_path = None
 
     def __repr__(self):
         return make_str("<PatchedFile: %s>") % make_str(self.path)
@@ -352,6 +354,12 @@ class PatchSet(list):
                 if compared_files:
                     compared_files[0].is_moved_file = True
                     patched_file.is_moved_file = True
+
+                    patched_file.moved_from_path = compared_files[0].path
+                    patched_file.moved_to_path = patched_file.path
+
+                    compared_files[0].moved_from_path = compared_files[0].path
+                    compared_files[0].moved_to_path = patched_file.path
 
     @classmethod
     def from_filename(cls, filename, encoding=DEFAULT_ENCODING, errors=None):
