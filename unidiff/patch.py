@@ -347,7 +347,7 @@ class PatchSet(list):
                 file_name = os.path.basename(patched_file.path)
                 compared_files = [compared_file for compared_file in self.removed_files \
                                   if os.path.basename(compared_file.path) == file_name and \
-                                  patched_file.added_lines_content == compared_file.removed_lines_content]
+                                  patched_file.added_lines_content.strip() == compared_file.removed_lines_content.strip()]
 
                 if compared_files:
                     compared_files[0].is_moved_file = True
